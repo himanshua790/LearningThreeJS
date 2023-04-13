@@ -1,6 +1,8 @@
 import Header from "@/Components/Header";
 import * as React from "react";
 import * as THREE from "three";
+// import OrbitControls from "three-orbit-controls";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 export function ThreeCanvasCamera() {
   const ref = React.useRef();
@@ -9,15 +11,25 @@ export function ThreeCanvasCamera() {
   React.useEffect(() => {
     if (!loaded && ref.current) {
       const scene = new THREE.Scene();
-      // Camera
+      const cursor = {
+        x: 0,
+        y: 0,
+      };
+
+      const handleEvent = (event) => {
+        cursor.x = event.clientX / window.innerWidth - 0.5;
+        cursor.y = event.clientY / window.innerHeight - 0.5;
+        console.log(cursor.y);
+      };
+      window.addEventListener("mousemove", handleEvent);
       const camera = new THREE.PerspectiveCamera(
-        45,
+        75,
         window.innerWidth / window.innerHeight,
         0.1,
         1000
       );
 
-      camera.position.set(2, 2, 2);
+      camera.position.set(cursor.x, cursor.y, 3);
 
       const renderer = new THREE.WebGLRenderer();
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -25,7 +37,6 @@ export function ThreeCanvasCamera() {
       const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
       const cubeMaterial = new THREE.MeshBasicMaterial({
         color: "cyan",
-        wireframe: true,
       });
       const CUBE = new THREE.Mesh(cubeGeometry, cubeMaterial);
 
@@ -41,19 +52,7 @@ export function ThreeCanvasCamera() {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
       };
-      const clock = new THREE.Clock();
       const tick = () => {
-        // Clock
-        const elapsedTime = clock.getElapsedTime();
-        console.log(elapsedTime);
-        // update object
-        CUBE.rotation.y = elapsedTime * Math.PI * 0.5; // on revolution per second
-        // CUBE.position.y = Math.sin(elapsedTime); // wave just like sine wave
-        // CUBE.position.x = Math.cos(elapsedTime); // wave just like Cos wave
-        // camera.position.y = Math.sin(elapsedTime); // wave just like sine wave
-        // camera.position.x = Math.cos(elapsedTime); // wave just like sine wave
-        camera.lookAt(CUBE.position);
-        // Render
         renderer.render(scene, camera);
 
         // Request Animation Frame
@@ -61,8 +60,12 @@ export function ThreeCanvasCamera() {
         window.requestAnimationFrame(tick);
       };
       tick();
-      // renderer.render(scene, camera);
 
+      // **********************************
+      // Control
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableZoom = true;
+      // **********************************
       // **********************************
       ref.current.innerHTML = "";
       ref.current.appendChild(renderer.domElement);
